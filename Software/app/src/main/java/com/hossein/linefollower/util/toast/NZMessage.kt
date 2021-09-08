@@ -272,6 +272,12 @@ class NZMessage {
                     ViewGroup.LayoutParams.WRAP_CONTENT
             )
             textViewL.weight = 1f
+            textViewL.setMargins(
+                SizeProvider.generalMargin,
+                0,
+                SizeProvider.generalMargin,
+                0
+            )
             textContainerLinearLayout.addView(
                     textView,
                     textViewL

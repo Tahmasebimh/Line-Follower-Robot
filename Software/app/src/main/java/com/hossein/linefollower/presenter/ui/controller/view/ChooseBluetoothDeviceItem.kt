@@ -1,4 +1,4 @@
-package com.hossein.linefollower.presenter.ui.main.view
+package com.hossein.linefollower.presenter.ui.controller.view
 
 import android.content.Context
 import android.view.Gravity

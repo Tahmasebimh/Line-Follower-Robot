@@ -4,16 +4,16 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.content.Context
-import android.util.Log
 import android.view.Gravity
 import android.widget.FrameLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.hossein.linefollower.core.provider.ColorProvider
 import com.hossein.linefollower.core.provider.ParamsProvider
 import com.hossein.linefollower.core.provider.SizeProvider
 import com.hossein.linefollower.core.provider.StringProvider
 import com.hossein.linefollower.presenter.calback.SetOnItemClickListener
 import com.hossein.linefollower.presenter.customview.textview.GeneralTextView
-import com.hossein.linefollower.presenter.ui.main.view.ChooseBTDeviceBottomSheetView
+import com.hossein.linefollower.presenter.ui.controller.view.ChooseBTDeviceBottomSheetView
 import com.hossein.linefollower.util.toast.ToastManager
 import java.io.IOException
 import java.util.*
@@ -33,6 +33,9 @@ class ControllerView(context: Context) : FrameLayout(context) {
     }
 
     private fun initView() {
+
+        setBackgroundColor(ColorProvider.white)
+
         conditionTextView = GeneralTextView(context)
         conditionTextView.gravity = Gravity.CENTER
         addView(
@@ -52,6 +55,8 @@ class ControllerView(context: Context) : FrameLayout(context) {
                 handleBluetooth()
             }
         }
+
+        bottomSheet = BottomSheetDialog(context)
     }
 
     fun handleBluetooth(){
@@ -79,7 +84,10 @@ class ControllerView(context: Context) : FrameLayout(context) {
             deviceList,
             object : SetOnItemClickListener {
                 override fun onItemClick(position: Int) {
-                    connectToChosenDevice(deviceList[position])
+                    if (connectToChosenDevice(deviceList[position])){
+                        //TODO setupController to send command
+                        conditionTextView.text = StringProvider.connectIsuccess
+                    }
                     bottomSheet.dismiss()
                 }
 

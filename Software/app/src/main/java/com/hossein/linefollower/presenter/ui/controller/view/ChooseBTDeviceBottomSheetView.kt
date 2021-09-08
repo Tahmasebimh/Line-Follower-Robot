@@ -1,4 +1,4 @@
-package com.hossein.linefollower.presenter.ui.main.view
+package com.hossein.linefollower.presenter.ui.controller.view
 
 import android.bluetooth.BluetoothDevice
 import android.content.Context
@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.hossein.linefollower.core.provider.ParamsProvider
 import com.hossein.linefollower.presenter.calback.SetOnItemClickListener
-import com.hossein.linefollower.presenter.ui.main.view.adapter.ChooseBTRVAdapter
+import com.hossein.linefollower.presenter.ui.controller.view.adapter.ChooseBTRVAdapter
 
 class ChooseBTDeviceBottomSheetView(
     context: Context,
