@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.content.Context
+import android.util.Log
 import android.view.Gravity
 import android.widget.FrameLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -14,6 +15,7 @@ import com.hossein.linefollower.core.provider.StringProvider
 import com.hossein.linefollower.presenter.calback.SetOnItemClickListener
 import com.hossein.linefollower.presenter.customview.textview.GeneralTextView
 import com.hossein.linefollower.presenter.ui.controller.view.ChooseBTDeviceBottomSheetView
+import com.hossein.linefollower.util.bluetooth.ConnectedThread
 import com.hossein.linefollower.util.toast.ToastManager
 import java.io.IOException
 import java.util.*
@@ -27,6 +29,7 @@ class ControllerView(context: Context) : FrameLayout(context) {
     private var mSocket: BluetoothSocket? = null
     private lateinit var bottomSheetView: ChooseBTDeviceBottomSheetView
     private lateinit var bottomSheet: BottomSheetDialog
+    private var connectedThread: ConnectedThread? = null
 
     init {
         initView()
@@ -86,7 +89,12 @@ class ControllerView(context: Context) : FrameLayout(context) {
                 override fun onItemClick(position: Int) {
                     if (connectToChosenDevice(deviceList[position])){
                         //TODO setupController to send command
+                        connectedThread = ConnectedThread(mSocket)
                         conditionTextView.text = StringProvider.connectIsuccess
+                        conditionTextView.setOnClickListener {
+                            Log.d(TAG, "onItemClick: send commnad")
+                            sendCommand("Test")
+                        }
                     }
                     bottomSheet.dismiss()
                 }
@@ -95,6 +103,10 @@ class ControllerView(context: Context) : FrameLayout(context) {
         )
         bottomSheet.setContentView(bottomSheetView)
         bottomSheet.show()
+    }
+
+    private fun sendCommand(command: String) {
+        connectedThread?.write(command.toByteArray())
     }
 
     private fun connectToChosenDevice(bluetoothDevice: BluetoothDevice): Boolean {
@@ -109,6 +121,7 @@ class ControllerView(context: Context) : FrameLayout(context) {
                     this
                 )
             } catch (e: Exception) {
+                Log.d(TAG, "connectToChosenDevice: ${e.toString()}")
                 try {
                     mSocket?.close()
                     ToastManager.showErrorMessage(
@@ -127,6 +140,7 @@ class ControllerView(context: Context) : FrameLayout(context) {
                 }
             }
         } catch (e: IOException) {
+            Log.d(TAG, "connectToChosenDevice: ${e.toString()}")
             ToastManager.showErrorMessage(
                 context,
                 StringProvider.prblemInConnecting,
