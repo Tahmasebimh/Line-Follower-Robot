@@ -3,12 +3,16 @@ package com.hossein.linefollower.util.bluetooth;
 import android.bluetooth.BluetoothSocket;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 public class ConnectedThread extends Thread {
     private interface MessageConstants {
@@ -25,17 +29,33 @@ public class ConnectedThread extends Thread {
     private InputStream mmInStream;
     private OutputStream mmOutStream;
     private byte[] mmBuffer;
-
-
+    private String receiverMessage = "";
     public ConnectedThread(BluetoothSocket bluetoothSocket) {
 
         sockettargetModule = bluetoothSocket;
         InputStream tmpIn = null;
         OutputStream tmpOut = null;
-        mHandler = new Handler();
+
+        mHandler = new Handler(Looper.getMainLooper()){
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                if (msg.what == MessageConstants.MESSAGE_READ){
+                    byte[] readBuff = (byte[]) msg.obj;
+                    String temp = new String(readBuff, 0, msg.arg1);
+                    receiverMessage += temp;
+                    Log.d(TAG, "handleMessage: receiver " + receiverMessage);
+                    if (receiverMessage.contains("#")){
+                        Log.d(TAG, "handleMessage: message is : " + receiverMessage);
+                        receiverMessage = "";
+                    }
+
+                }
+            }
+        };
         BluetoothSocket socket;
         try {
             tmpIn = bluetoothSocket.getInputStream();
+
         } catch (IOException e) {
             Log.e(TAG, "Error occurred when creating input stream", e);
         }
@@ -55,16 +75,18 @@ public class ConnectedThread extends Thread {
         int numBytes;
         while (true) {
             try {
-                Log.d(TAG, "run: 00 ");
+
                 // Read from the InputStream.
                 numBytes = mmInStream.read(mmBuffer);
                 // Send the obtained bytes to the UI activity.
                 //mHandler = new Handler();
                 Message readMsg = mHandler.obtainMessage(
-                        MessageConstants.MESSAGE_READ, numBytes, -1,
-                        mmBuffer);
+                        MessageConstants.MESSAGE_READ,
+                        numBytes, -1,
+                        mmBuffer
+                );
                 readMsg.sendToTarget();
-                Log.d(TAG, "run: 11" + readMsg.toString());
+                Log.d(TAG, "run: 11");
             } catch (IOException e) {
                 Log.d(TAG, "Input stream was disconnected", e);
                 break;

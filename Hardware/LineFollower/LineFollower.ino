@@ -22,12 +22,13 @@ void loop() {
 
   if (Bluetooth.available()){
     String input = Bluetooth.readString();
-    Serial.println(input);
+    delay(1000);
     
-    Bluetooth.write("hello");
-    delay(5000);
-    Serial.println("Sended");
 
-    }
+  }
+
+  Serial.println("Hellow###");
+  Bluetooth.println("Hellow##");
+  delay(5000);
 
 }

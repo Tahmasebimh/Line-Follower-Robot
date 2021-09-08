@@ -90,6 +90,7 @@ class ControllerView(context: Context) : FrameLayout(context) {
                     if (connectToChosenDevice(deviceList[position])){
                         //TODO setupController to send command
                         connectedThread = ConnectedThread(mSocket)
+                        connectedThread!!.start()
                         conditionTextView.text = StringProvider.connectIsuccess
                         conditionTextView.setOnClickListener {
                             Log.d(TAG, "onItemClick: send commnad")
