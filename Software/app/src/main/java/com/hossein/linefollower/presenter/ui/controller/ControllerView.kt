@@ -4,14 +4,19 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.content.Context
+import android.graphics.Color
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.Gravity
+import android.view.View
 import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.RelativeLayout
+import androidx.core.content.ContextCompat
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.hossein.linefollower.core.provider.ColorProvider
-import com.hossein.linefollower.core.provider.ParamsProvider
-import com.hossein.linefollower.core.provider.SizeProvider
-import com.hossein.linefollower.core.provider.StringProvider
+import com.hossein.linefollower.R
+import com.hossein.linefollower.core.provider.*
 import com.hossein.linefollower.presenter.calback.SetOnItemClickListener
 import com.hossein.linefollower.presenter.customview.textview.GeneralTextView
 import com.hossein.linefollower.presenter.ui.controller.view.ChooseBTDeviceBottomSheetView
@@ -19,6 +24,7 @@ import com.hossein.linefollower.util.bluetooth.ConnectedThread
 import com.hossein.linefollower.util.toast.ToastManager
 import java.io.IOException
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
 class ControllerView(context: Context) : FrameLayout(context) {
@@ -30,6 +36,13 @@ class ControllerView(context: Context) : FrameLayout(context) {
     private lateinit var bottomSheetView: ChooseBTDeviceBottomSheetView
     private lateinit var bottomSheet: BottomSheetDialog
     private var connectedThread: ConnectedThread? = null
+
+    private lateinit var relativeLayout: RelativeLayout
+    private lateinit var leftImageView: ImageView
+    private lateinit var rightImageView: ImageView
+    private lateinit var topImageView: ImageView
+    private lateinit var bottomImageView: ImageView
+    private lateinit var stopImageView: ImageView
 
     init {
         initView()
@@ -44,9 +57,86 @@ class ControllerView(context: Context) : FrameLayout(context) {
         addView(
             conditionTextView,
             ParamsProvider.Frame.defaultParams()
-                .gravity(Gravity.CENTER)
+                .gravity(Gravity.TOP)
+                .margins(
+                    SizeProvider.generalMargin,
+                    SizeProvider.generalMargin * 4,
+                    SizeProvider.generalMargin,
+                    SizeProvider.generalMargin
+                )
+        )
+
+        relativeLayout = RelativeLayout(context)
+        addView(
+            relativeLayout,
+            ParamsProvider.Frame.defaultParams()
+                .gravity(Gravity.BOTTOM or Gravity.CENTER_VERTICAL)
                 .margins(SizeProvider.generalMargin)
         )
+
+        topImageView = ImageView(context)
+        topImageView.setBackgroundColor(ColorProvider.accentColor)
+        topImageView.id = View.generateViewId()
+        topImageView.setImageResource(R.drawable.ic_baseline_arrow_24)
+        topImageView.rotation = -90f
+        relativeLayout.addView(
+            topImageView,
+            ParamsProvider.Relative.wrapContent()
+//                .aboveOf(stopImageView.id)
+                .centerHorizontal()
+                .alignParentTop()
+        )
+
+
+        stopImageView = ImageView(context)
+        stopImageView.id = View.generateViewId()
+        stopImageView.setBackgroundColor(ColorProvider.accentColor)
+        stopImageView.setImageResource(R.drawable.ic_baseline_stop_24)
+        stopImageView.scaleType = ImageView.ScaleType.CENTER_CROP
+        relativeLayout.addView(
+            stopImageView,
+            ParamsProvider.Relative.wrapContent()
+                .below(topImageView.id)
+                .centerInParent()
+                .margins(SizeProvider.generalMargin)
+        )
+
+        leftImageView = ImageView(context)
+        leftImageView.setBackgroundColor(ColorProvider.accentColor)
+
+        leftImageView.id = View.generateViewId()
+        leftImageView.setImageResource(R.drawable.ic_baseline_arrow_24)
+        leftImageView.rotation = 180f
+        relativeLayout.addView(
+            leftImageView,
+            ParamsProvider.Relative.wrapContent()
+                .toStartOf(stopImageView.id)
+                .centerVertical()
+        )
+
+
+        rightImageView = ImageView(context)
+        rightImageView.id = View.generateViewId()
+        rightImageView.setBackgroundColor(ColorProvider.accentColor)
+        rightImageView.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_baseline_arrow_24))
+        relativeLayout.addView(
+            rightImageView,
+            ParamsProvider.Relative.wrapContent()
+                .toEndOf(stopImageView.id)
+                .centerVertical()
+        )
+
+        bottomImageView = ImageView(context)
+        bottomImageView.setBackgroundColor(ColorProvider.accentColor)
+        bottomImageView.setImageResource(R.drawable.ic_baseline_arrow_24)
+        bottomImageView.rotation = 90f
+        relativeLayout.addView(
+            bottomImageView,
+            ParamsProvider.Relative.wrapContent()
+                .below(stopImageView.id)
+                .centerHorizontal()
+        )
+
 
         if (mSocket != null){
             if (mSocket!!.isConnected){
@@ -60,6 +150,27 @@ class ControllerView(context: Context) : FrameLayout(context) {
         }
 
         bottomSheet = BottomSheetDialog(context)
+
+
+        topImageView.setOnClickListener {
+            sendCommand(Command.FORWARD.value())
+        }
+
+        leftImageView.setOnClickListener {
+            sendCommand(Command.TURNLEFT.value())
+        }
+
+        rightImageView.setOnClickListener {
+            sendCommand(Command.TURNRIGHT.value())
+        }
+
+        bottomImageView.setOnClickListener {
+            sendCommand(Command.BACKWARD.value())
+        }
+        stopImageView.setOnClickListener {
+            sendCommand(Command.STOP.value())
+        }
+
     }
 
     fun handleBluetooth(){
@@ -74,8 +185,11 @@ class ControllerView(context: Context) : FrameLayout(context) {
         }
 
         //TODO add how to pair new device
-        if (!mBluetoothAdapter.enable()) mBluetoothAdapter.enable()
         val pairedDevice = mBluetoothAdapter.bondedDevices
+        if (!mBluetoothAdapter.enable()){
+            mBluetoothAdapter.enable()
+            Thread.sleep(TimeUnit.SECONDS.toMillis(3))
+        }
         val deviceList = ArrayList<BluetoothDevice>()
 
         pairedDevice.forEach {
