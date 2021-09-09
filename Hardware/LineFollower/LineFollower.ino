@@ -14,11 +14,14 @@ const uint8_t MINSPEED = 50;
 const uint8_t NORMALSPEED = 150;
 const uint8_t MAXSPEED = 255;
 
+int delay_time = 0;
+
+
 //BLT Value With android
 const String FORWARD = "forward";
 const String BACKWARD = "backward"; 
-const String TURNRIGHT = "right";
-const String TURNLEFT = "left";
+const String TURNRIGHT = "turnRight";
+const String TURNLEFT = "turnLeft";
 const String STOP = "stop";
 
 SoftwareSerial Bluetooth(0, 1); // RX | TX
@@ -30,7 +33,7 @@ void setup() {
   Bluetooth.begin(9600);
   Serial.begin(9600);
   Bluetooth.setTimeout(500);
-  delay(1000);    
+  delay(0);    
 }
 
 void loop() {
@@ -38,20 +41,26 @@ void loop() {
 
   if (Bluetooth.available()){
     String input = Bluetooth.readString();
+    Serial.println(input);
     if(input == FORWARD){
-      
+      Serial.println("forward");
+        driver.full_stop(delay_time); 
+        driver.forward(MAXSPEED, delay_time);
     }else if(input == BACKWARD){
-      
+        driver.full_stop(delay_time); 
+        driver.backward(MAXSPEED, delay_time);
     }else if(input == TURNRIGHT){
-        
+        driver.full_stop(delay_time); 
+        driver.turn_right(MAXSPEED, delay_time);
     }else if(input == TURNLEFT){
-      
+        driver.full_stop(delay_time); 
+        driver.turn_left(MAXSPEED, delay_time);
+    }else if(input == STOP){
+        driver.full_stop(delay_time); 
     }
     delay(1000);
   }else{
-    Serial.println("Hellow###");
-    Bluetooth.println("Hellow##");
-    delay(5000);
+   
   }
 
   
