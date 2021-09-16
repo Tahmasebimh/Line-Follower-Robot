@@ -10,11 +10,16 @@ const uint8_t ENB = 5;
 const uint8_t IN3 = 6;
 const uint8_t IN4 = 7;
 
+//IR Setup
+const uint8_t IR_R = 8;
+const uint8_t IR_L = 9;
+
 const uint8_t MINSPEED = 50;
 const uint8_t NORMALSPEED = 150;
 const uint8_t MAXSPEED = 255;
+const uint8_t SELECTEDSPEED = 150;
 
-int delay_time = 0;
+int delay_time = 500;
 
 
 //BLT Value With android
@@ -32,36 +37,54 @@ void setup() {
   // put your setup code here, to run once:
   Bluetooth.begin(9600);
   Serial.begin(9600);
-  Bluetooth.setTimeout(500);
-  delay(0);    
+  Bluetooth.setTimeout(300);
+  pinMode(IR_R, INPUT);
+  pinMode(IR_L, INPUT);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+ 
 
   if (Bluetooth.available()){
     String input = Bluetooth.readString();
     Serial.println(input);
     if(input == FORWARD){
       Serial.println("forward");
-        driver.full_stop(delay_time); 
         driver.forward(MAXSPEED, delay_time);
     }else if(input == BACKWARD){
-        driver.full_stop(delay_time); 
         driver.backward(MAXSPEED, delay_time);
     }else if(input == TURNRIGHT){
-        driver.full_stop(delay_time); 
         driver.turn_right(MAXSPEED, delay_time);
     }else if(input == TURNLEFT){
-        driver.full_stop(delay_time); 
         driver.turn_left(MAXSPEED, delay_time);
     }else if(input == STOP){
         driver.full_stop(delay_time); 
     }
-    delay(1000);
   }else{
    
   }
+
+  uint8_t irr = digitalRead(IR_R);
+  uint8_t irl = digitalRead(IR_L);
+  Serial.print("Irr is : ");
+  Serial.println(irr);
+  Serial.print("Irl is : ");
+  Serial.println(irl);
+
+   if(irr == 0 && irl == 0){
+      driver.forward(SELECTEDSPEED, delay_time);
+    //go Forward 
+   }else if(irr == 1 && irl == 0){
+      driver.turn_right(SELECTEDSPEED, delay_time);
+     //turn right
+   }else if(irr == 0 && irl == 1){
+      driver.turn_left(SELECTEDSPEED, delay_time);
+     //turn left   
+   }else if(irr == 1 && irl == 1){
+      driver.full_stop(delay_time); 
+     //stop 
+   }
 
   
 }
