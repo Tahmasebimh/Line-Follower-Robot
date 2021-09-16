@@ -1,4 +1,6 @@
 #include <L298N.h>
+
+
 #include <SoftwareSerial.h>
 // Motors setup
 //Must be PWM pin
@@ -17,10 +19,10 @@ const uint8_t IR_L = 9;
 const uint8_t MINSPEED = 50;
 const uint8_t NORMALSPEED = 80;
 const uint8_t MAXSPEED = 250;
-const uint8_t TURNSPEED = 250;
-uint8_t SELECTEDSPEED = 80;
+uint8_t TURNSPEED = 250;
+uint8_t SELECTEDSPEED = 60;
 
-int delay_time = 0;
+int delay_time = 200;
 
 
 //BLT Value With android
@@ -32,7 +34,7 @@ const String STOP = "stop";
 const String SPEED = "SPEED";
 
 SoftwareSerial Bluetooth(0, 1); // RX | TX
-L298N driver(ENA, IN1, IN2, IN3, IN4, ENB); 
+L298N driver(ENA, IN1, IN2, IN3, IN4, ENB, false, MINSPEED); 
 
 
 void setup() {
@@ -52,20 +54,19 @@ void loop() {
     String input = Bluetooth.readString();
     if(input.startsWith(SPEED)){
         SELECTEDSPEED = input.substring(input.indexOf("_") + 1, input.length()).toInt();
-        Serial.println(SELECTEDSPEED);
+        TURNSPEED = SELECTEDSPEED / 2;
         delay(1000);
     }else{
        if(input == FORWARD){
-            Serial.println("forward");
             driver.forward(SELECTEDSPEED, delay_time);
           }else if(input == BACKWARD){
             driver.backward(SELECTEDSPEED, delay_time);
           }else if(input == TURNRIGHT){
-            driver.turn_right(TURNSPEED, delay_time);
+            driver.right(TURNSPEED, delay_time);
           }else if(input == TURNLEFT){
-            driver.turn_left(TURNSPEED, delay_time);
+            driver.left(TURNSPEED, delay_time);
           }else if(input == STOP){
-             driver.full_stop(delay_time); 
+             driver.stop(false, delay_time); 
           }
     }
    }
@@ -79,17 +80,19 @@ void loop() {
   Serial.print("Irl is : ");
   Serial.println(irl);*/
 
-   if(irr == 0 && irl == 0){
-      driver.forward(SELECTEDSPEED, delay_time);
+   if(irr == LOW && irl == LOW){
+      driver.forward(SELECTEDSPEED, 0);
     //go Forward 
-   }else if(irr == 1 && irl == 0){
-      driver.turn_right(TURNSPEED, delay_time);
+   }else if(irr == HIGH && irl == LOW){
+      driver.right(SELECTEDSPEED, delay_time);
+      //driver.drive(driver.RIGHT, SELECTEDSPEED, 40, delay_time);
      //turn right
-   }else if(irr == 0 && irl == 1){
-      driver.turn_left(TURNSPEED, delay_time);
+   }else if(irr == LOW && irl == HIGH){
+      //driver.drive(driver.LEFT, SELECTEDSPEED, 40, delay_time);
+      driver.left(SELECTEDSPEED, delay_time);
      //turn left   
-   }else if(irr == 1 && irl == 1){
-      driver.full_stop(delay_time); 
+   }else if(irr == HIGH && irl == HIGH){
+      driver.stop(false, delay_time); 
      //stop 
    }
 
