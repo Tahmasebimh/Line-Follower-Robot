@@ -13,6 +13,7 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.RelativeLayout
+import android.widget.SeekBar
 import androidx.core.content.ContextCompat
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.hossein.linefollower.R
@@ -37,6 +38,8 @@ class ControllerView(context: Context) : FrameLayout(context) {
     private lateinit var bottomSheet: BottomSheetDialog
     private var connectedThread: ConnectedThread? = null
 
+    private lateinit var seekBar: SeekBar
+
     private lateinit var relativeLayout: RelativeLayout
     private lateinit var leftImageView: ImageView
     private lateinit var rightImageView: ImageView
@@ -60,7 +63,39 @@ class ControllerView(context: Context) : FrameLayout(context) {
                 .gravity(Gravity.TOP)
                 .margins(
                     SizeProvider.generalMargin,
-                    SizeProvider.generalMargin * 4,
+                    SizeProvider.generalMargin * 2,
+                    SizeProvider.generalMargin,
+                    SizeProvider.generalMargin
+                )
+        )
+
+
+        seekBar = SeekBar(context)
+        seekBar.setBackgroundColor(ColorProvider.darkPrimaryColor)
+        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
+            override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
+                Log.d(TAG, "onProgressChanged: value : $p1")
+                sendCommand(Command.SPEED.value + "_" + p1)
+
+            }
+
+            override fun onStartTrackingTouch(p0: SeekBar?) {
+
+            }
+
+            override fun onStopTrackingTouch(p0: SeekBar?) {
+
+            }
+
+        })
+        seekBar.max = 250
+        addView(
+            seekBar,
+            ParamsProvider.Frame.defaultParams()
+                .gravity(Gravity.TOP)
+                .margins(
+                    SizeProvider.generalMargin,
+                    SizeProvider.generalMargin * 8,
                     SizeProvider.generalMargin,
                     SizeProvider.generalMargin
                 )
@@ -221,7 +256,7 @@ class ControllerView(context: Context) : FrameLayout(context) {
     }
 
     private fun sendCommand(command: String) {
-        connectedThread?.write(command.toByteArray())
+        if (mSocket != null) connectedThread?.write(command.toByteArray())
     }
 
     private fun connectToChosenDevice(bluetoothDevice: BluetoothDevice): Boolean {

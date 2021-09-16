@@ -5,6 +5,7 @@ enum class Command(val value: String) {
     BACKWARD("backward"),
     TURNRIGHT("turnRight"),
     TURNLEFT("turnLeft"),
+    SPEED("SPEED"),
     STOP("stop");
 
     fun value() : String  = value
