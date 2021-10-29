@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -42,13 +43,14 @@ public class ConnectedThread extends Thread {
                 if (msg.what == MessageConstants.MESSAGE_READ){
                     byte[] readBuff = (byte[]) msg.obj;
                     String temp = new String(readBuff, 0, msg.arg1);
+                    Log.d(TAG, "handleMessage: Temp is : " + temp);
                     receiverMessage += temp;
-                    Log.d(TAG, "handleMessage: receiver " + receiverMessage);
-                    if (receiverMessage.contains("#")){
-                        Log.d(TAG, "handleMessage: message is : " + receiverMessage);
-                        receiverMessage = "";
-                    }
-
+                    Log.d(TAG, "handleMessage: Message is : " + receiverMessage);
+//                    if (receiverMessage.contains("#")){
+//                        Log.d(TAG, "handleMessage: message is : " + receiverMessage);
+//                        receiverMessage = "";
+//                    }
+                    receiverMessage = "";
                 }
             }
         };
@@ -70,25 +72,31 @@ public class ConnectedThread extends Thread {
 
     @Override
     public void run() {
-        Log.d(TAG, "run: ");
         mmBuffer = new byte[1024];
         int numBytes;
         while (true) {
             try {
-
-                // Read from the InputStream.
-                numBytes = mmInStream.read(mmBuffer);
-                // Send the obtained bytes to the UI activity.
-                //mHandler = new Handler();
-                Message readMsg = mHandler.obtainMessage(
-                        MessageConstants.MESSAGE_READ,
-                        numBytes, -1,
-                        mmBuffer
-                );
-                readMsg.sendToTarget();
-                Log.d(TAG, "run: 11");
+                if (mmInStream.available() > 0) {
+                    try {
+                        // Read from the InputStream.
+                        numBytes = mmInStream.read(mmBuffer);
+                        // Send the obtained bytes to the UI activity.
+                        //mHandler = new Handler();
+                        Message readMsg = mHandler.obtainMessage(
+                                MessageConstants.MESSAGE_READ,
+                                numBytes,
+                                -1,
+                                mmBuffer
+                        );
+                        readMsg.sendToTarget();
+                    } catch (IOException e) {
+                        break;
+                    }
+                }else{
+                    SystemClock.sleep(100);
+                }
             } catch (IOException e) {
-                Log.d(TAG, "Input stream was disconnected", e);
+                e.printStackTrace();
                 break;
             }
         }
@@ -96,17 +104,14 @@ public class ConnectedThread extends Thread {
 
     public void write(byte[] bytes) {
         if (bytes.length == 0) {
-            Log.i("////*/////*////", "khalie");
         }
         try {
-            Log.d(TAG, "write: 11");
             mmOutStream.write(bytes);
             // Share the sent message with the UI activity.
             //mHandler = new Handler();
             Message writtenMsg = mHandler.obtainMessage(
                     MessageConstants.MESSAGE_WRITE, -1, -1, mmBuffer);
             writtenMsg.sendToTarget();
-            Log.d(TAG, "write: 00");
         } catch (IOException e) {
             Log.e(TAG, "Error occurred when sending data", e);
 
