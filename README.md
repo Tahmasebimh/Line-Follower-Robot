@@ -18,7 +18,7 @@ Tags: BSC Project
 | VCC | 3.3V | Red |
 | GND | GND | Black |
 
-![RFID_Diagram.png](RFID%20Document%2063df1a68774b4e4f95ee52654ae65d3a/RFID_Diagram.png)
+![RFID_Diagram.png](Assets/RFID_Diagram.png)
 
 ### Initial Function:
 
