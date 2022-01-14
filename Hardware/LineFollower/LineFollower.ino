@@ -16,14 +16,17 @@ const uint8_t IN4 = 7;
 //IR Setup I should change it to Analog Pin
 const uint8_t IR_R = 8;
 const uint8_t IR_L = 9;
+const uint8_t IR_C = 10;
 
 const uint8_t MINSPEED = 50;
-const uint8_t NORMALSPEED = 100;
-const uint8_t MAXSPEED = 250;
-uint8_t TURNSPEED = 100;
-uint8_t SELECTEDSPEED = 100;
-
+const uint8_t NORMALSPEED = 70;
+const uint8_t MAXSPEED = 120;
+uint8_t TURNSPEED = NORMALSPEED;
+uint8_t SELECTEDSPEED = MINSPEED;
 int delay_time = 0;
+
+
+/*
 //RFID Setup
 #define RST_PIN         9           // Configurable, see typical pin layout above
 #define SS_PIN          10          // Configurable, see typical pin layout above
@@ -37,6 +40,7 @@ String readBlockString;
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
 
 MFRC522::MIFARE_Key key;
+*/
 
 //BLT Value With android
 const String FORWARD = "forward";
@@ -58,19 +62,19 @@ void setup() {
   //pinMode(IR_R, INPUT);
   //pinMode(IR_L, INPUT);
 
-  SPI.begin();        // Init SPI bus
-  mfrc522.PCD_Init(); // Init MFRC522 card
+  //SPI.begin();        // Init SPI bus
+  //mfrc522.PCD_Init(); // Init MFRC522 card
 
     // Prepare the key (used both as key A and as key B)
     // using FFFFFFFFFFFFh which is the default at chip delivery from the factory
-  for (byte i = 0; i < 6; i++) {
-    key.keyByte[i] = 0xFF;
-  }
+//  for (byte i = 0; i < 6; i++) {
+//    key.keyByte[i] = 0xFF;
+//  }
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  if (Bluetooth.available()){
+  /*if (Bluetooth.available()){
       String input = Bluetooth.readString();
       if(input.startsWith(SPEED)){
           SELECTEDSPEED = input.substring(input.indexOf("_") + 1, input.length()).toInt();
@@ -89,7 +93,9 @@ void loop() {
           }
       }
    }
+*/
 
+/*
    //RFID Code: 
    if (mfrc522.PICC_IsNewCardPresent()){
     // Select one of the cards
@@ -108,33 +114,43 @@ void loop() {
            // Stop encryption on PCD
            mfrc522.PCD_StopCrypto1();
         }
-   }
+        */
+   //}
 
-  /*
+  
   uint8_t irr = digitalRead(IR_R);
   uint8_t irl = digitalRead(IR_L);
+  uint8_t irc = digitalRead(IR_C);
 
+    
    if(irr == LOW && irl == LOW){
-      driver.forward(SELECTEDSPEED, delay_time);
+      driver.forward(NORMALSPEED, delay_time);
     //go Forward 
    }else if(irr == HIGH && irl == LOW){
-      driver.stop(false, 0);
-      driver.right(TURNSPEED, delay_time);
-      //driver.drive(driver.RIGHT, SELECTEDSPEED, 40, delay_time);
+      do{
+        driver.right(MAXSPEED, 0);
+        
+        irr = digitalRead(IR_R);
+        irl = digitalRead(IR_L);
+        irc = digitalRead(IR_C);
+        }while(irc != HIGH);
+      
      //turn right
    }else if(irr == LOW && irl == HIGH){
-      //driver.drive(driver.LEFT, SELECTEDSPEED, 40, delay_time);
-      driver.stop(false, 0);
-      driver.left(TURNSPEED, delay_time);
+      do{
+          driver.left(MAXSPEED, 0);
+          irr = digitalRead(IR_R);
+          irl = digitalRead(IR_L);
+          irc = digitalRead(IR_C);          
+      }while(irc != HIGH);
      //turn left   
    }else if(irr == HIGH && irl == HIGH){
       driver.stop(false, delay_time); 
      //stop 
    }
-   */
 }
 
-
+/*
 int readBlock(int blockNumber, byte arrayAddress[]) 
 {
   int largestModulo4Number = blockNumber / 4 * 4;
@@ -157,3 +173,4 @@ int readBlock(int blockNumber, byte arrayAddress[])
   }
 //  Serial.println("block was read");
 }
+*/
