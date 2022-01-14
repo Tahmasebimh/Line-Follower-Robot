@@ -1,4 +1,4 @@
-# RFID Document
+# Line Follower
 
 Created: January 14, 2022 1:33 PM
 Tags: BSC Project
@@ -162,5 +162,3 @@ const uint8_t RFID_TURN_RIGHT = 3;
 const uint8_t RFID_SPEED_UP = 4;
 const uint8_t RFID_SPEED_DOWN = 5;
 ```
-
-[RFID Document](https://www.notion.so/RFID-Document-fab9b30d4a18471596c5d0fb17458593)
