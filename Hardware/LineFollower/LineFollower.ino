@@ -45,11 +45,18 @@ uint8_t irc;
 #define RST_PIN         9           // Configurable, see typical pin layout above
 #define SS_PIN          10          // Configurable, see typical pin layout above
 int block = 2;                      //this is the block number we will write into and then read. 
-byte blockcontent[16];              //an array with 16 bytes to be written into one of the 64 card blocks is defined
 byte readbackblock[18];             //This array is used for reading out a block.
 String readBlockString;             //This is RFID strign when read by RFID module
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
 MFRC522::MIFARE_Key key;
+
+//TAG command
+const uint8_t RFID_NO_TAG_READ = 0;
+const uint8_t RFID_STOP_MOTION = 1;
+const uint8_t RFID_TURN_LEFT   = 2;
+const uint8_t RFID_TURN_RIGHT  = 3;
+const uint8_t RFID_SPEED_UP    = 4;
+const uint8_t RFID_SPEED_DOWN  = 5;
 
 
 //BLT Value With android
