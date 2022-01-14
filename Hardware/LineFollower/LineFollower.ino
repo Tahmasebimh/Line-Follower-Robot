@@ -3,6 +3,10 @@
 #include <SPI.h>
 #include <MFRC522.h>
 
+//Global variable
+bool runPermit = true;
+
+
 //blutooth setup
 SoftwareSerial Bluetooth(0, 1); // RX | TX
 
@@ -51,12 +55,12 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
 MFRC522::MIFARE_Key key;
 
 //TAG command
-const uint8_t RFID_NO_TAG_READ = 0;
-const uint8_t RFID_STOP_MOTION = 1;
-const uint8_t RFID_TURN_LEFT   = 2;
-const uint8_t RFID_TURN_RIGHT  = 3;
-const uint8_t RFID_SPEED_UP    = 4;
-const uint8_t RFID_SPEED_DOWN  = 5;
+const int RFID_NO_TAG_READ = 0;
+const int RFID_STOP_MOTION = 1;
+const int RFID_TURN_LEFT   = 2;
+const int RFID_TURN_RIGHT  = 3;
+const int RFID_SPEED_UP    = 4;
+const int RFID_SPEED_DOWN  = 5;
 
 
 //BLT Value With android
@@ -95,6 +99,8 @@ void loop() {
            {
              if(readbackblock[j] > 0) readBlockString.concat((char)readbackblock[j]);
            }
+           Serial.println(readBlockString);
+           handleRFIDTagData(readBlockString.toInt());
            // Halt PICC
            mfrc522.PICC_HaltA();
            // Stop encryption on PCD
@@ -103,9 +109,7 @@ void loop() {
    }
 
   
-  readIRSensorsDatas();
-
-    
+   readIRSensorsDatas();
    if(irr == LOW && irl == LOW){
         //go Forward 
       driver.forward(NORMALSPEED, delay_time);
@@ -126,6 +130,8 @@ void loop() {
       driver.stop(false, delay_time); 
      //stop 
    }
+
+   //END LOOP
 }
 
 
@@ -149,4 +155,32 @@ void readIRSensorsDatas(){
   irr = analogRead(IR_R) / irMidRange;
   irl = analogRead(IR_L) / irMidRange;
   irc = analogRead(IR_C) / irMidRange;
+}
+
+void handleRFIDTagData(int data){
+    Serial.print("Data is : ");
+    Serial.println(data);
+    switch(data){
+      case RFID_NO_TAG_READ: 
+        Serial.println("No TAG read");
+        break;
+      case RFID_STOP_MOTION:
+        Serial.println("Stop TAG");
+        break;
+      case RFID_TURN_LEFT: 
+        Serial.println("Turn left TAG");
+        break;
+      case RFID_TURN_RIGHT: 
+        Serial.println("Turn Right TAG");
+        break;
+      case RFID_SPEED_UP: 
+        Serial.println("Speed up TAG");
+        break;
+      case RFID_SPEED_DOWN: 
+        Serial.println("Speed down TAG");
+        break;
+      default: 
+        Serial.println("Unknown TAG");
+        break;      
+    }
 }
