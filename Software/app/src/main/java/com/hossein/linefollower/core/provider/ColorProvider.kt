@@ -4,6 +4,7 @@ import android.graphics.Color
 
 object ColorProvider {
 
+    val lineColor: Int = Color.LTGRAY
     val white = Color.WHITE
     val darkPrimaryColor = Color.parseColor("#0288D1")
     val lightPrimaryColor = Color.parseColor("#B3E5FC")

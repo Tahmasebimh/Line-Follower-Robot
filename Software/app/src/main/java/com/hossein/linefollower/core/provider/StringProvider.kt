@@ -3,8 +3,9 @@ package com.hossein.linefollower.core.provider
 object StringProvider {
 
 
+    val clickToUpdate: String = "برای آپدیت وضعیت کلیک کنید"
     val connectIsuccess: String = "اتصال برقرار است"
-    val noConncetionAvailable: String = "اتصال برقرار نیست \n برای ایجاد اتصال کلیلک کنید"
+    val noConncetionAvailable: String = "اتصال برقرار نیست"
     val theConnectionIsAvailable: String = "اتصال برقرار است"
     val connectedTo: String = "اتصال موفق به "
     val prblemInConnecting: String = "در اتصال مشکلی ایجاد شده"

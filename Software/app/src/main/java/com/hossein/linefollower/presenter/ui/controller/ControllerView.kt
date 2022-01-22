@@ -10,19 +10,23 @@ import android.os.Looper
 import android.util.Log
 import android.view.Gravity
 import android.view.View
-import android.widget.FrameLayout
-import android.widget.ImageView
-import android.widget.RelativeLayout
-import android.widget.SeekBar
+import android.widget.*
 import androidx.core.content.ContextCompat
+import androidx.core.view.setPadding
+import androidx.core.widget.NestedScrollView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.hossein.linefollower.R
 import com.hossein.linefollower.core.provider.*
 import com.hossein.linefollower.presenter.calback.SetOnItemClickListener
 import com.hossein.linefollower.presenter.customview.textview.GeneralTextView
+import com.hossein.linefollower.presenter.ui.controller.adapter.LogRVAdapter
 import com.hossein.linefollower.presenter.ui.controller.view.ChooseBTDeviceBottomSheetView
-import com.hossein.linefollower.util.bluetooth.ConnectedThread
+import com.hossein.linefollower.util.bluetooth.ConnectedThreadHelper
+import com.hossein.linefollower.util.rfid.RFIDModel
 import com.hossein.linefollower.util.toast.ToastManager
+import top.defaults.drawabletoolbox.DrawableBuilder
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -30,22 +34,24 @@ import kotlin.collections.ArrayList
 
 class ControllerView(context: Context) : FrameLayout(context) {
 
+    private var mSocket: BluetoothSocket? = null
+    private lateinit var bottomSheet: BottomSheetDialog
+    private lateinit var bottomSheetView: ChooseBTDeviceBottomSheetView
     val TAG = "ControllerView>>>"
 
-    private lateinit var conditionTextView: GeneralTextView
-    private var mSocket: BluetoothSocket? = null
-    private lateinit var bottomSheetView: ChooseBTDeviceBottomSheetView
-    private lateinit var bottomSheet: BottomSheetDialog
-    private var connectedThread: ConnectedThread? = null
 
-    private lateinit var seekBar: SeekBar
+    private lateinit var containerLinearLayout: LinearLayout
 
-    private lateinit var relativeLayout: RelativeLayout
-    private lateinit var leftImageView: ImageView
-    private lateinit var rightImageView: ImageView
-    private lateinit var topImageView: ImageView
-    private lateinit var bottomImageView: ImageView
-    private lateinit var stopImageView: ImageView
+    private lateinit var titleTextView: GeneralTextView
+    private lateinit var lineView: View
+
+    private lateinit var recyclerView: RecyclerView
+
+    private lateinit var lineView2: View
+    private lateinit var statusButton: GeneralTextView
+
+    private val rvAdapter = LogRVAdapter()
+
 
     init {
         initView()
@@ -53,162 +59,109 @@ class ControllerView(context: Context) : FrameLayout(context) {
 
     private fun initView() {
 
-        setBackgroundColor(ColorProvider.white)
-
-        conditionTextView = GeneralTextView(context)
-        conditionTextView.gravity = Gravity.CENTER
-        addView(
-            conditionTextView,
-            ParamsProvider.Frame.defaultParams()
-                .gravity(Gravity.TOP)
-                .margins(
-                    SizeProvider.generalMargin,
-                    SizeProvider.generalMargin * 2,
-                    SizeProvider.generalMargin,
-                    SizeProvider.generalMargin
-                )
-        )
-
-
-        seekBar = SeekBar(context)
-        seekBar.setBackgroundColor(ColorProvider.darkPrimaryColor)
-        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
-            override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                Log.d(TAG, "onProgressChanged: value : $p1")
-                sendCommand(Command.SPEED.value + "_" + p1)
-
-            }
-
-            override fun onStartTrackingTouch(p0: SeekBar?) {
-
-            }
-
-            override fun onStopTrackingTouch(p0: SeekBar?) {
-
-            }
-
-        })
-        seekBar.max = 250
-        addView(
-            seekBar,
-            ParamsProvider.Frame.defaultParams()
-                .gravity(Gravity.TOP)
-                .margins(
-                    SizeProvider.generalMargin,
-                    SizeProvider.generalMargin * 8,
-                    SizeProvider.generalMargin,
-                    SizeProvider.generalMargin
-                )
-        )
-
-        relativeLayout = RelativeLayout(context)
-        addView(
-            relativeLayout,
-            ParamsProvider.Frame.defaultParams()
-                .gravity(Gravity.BOTTOM or Gravity.CENTER_VERTICAL)
-                .margins(SizeProvider.generalMargin)
-        )
-
-        topImageView = ImageView(context)
-        topImageView.setBackgroundColor(ColorProvider.accentColor)
-        topImageView.id = View.generateViewId()
-        topImageView.setImageResource(R.drawable.ic_baseline_arrow_24)
-        topImageView.rotation = -90f
-        relativeLayout.addView(
-            topImageView,
-            ParamsProvider.Relative.wrapContent()
-//                .aboveOf(stopImageView.id)
-                .centerHorizontal()
-                .alignParentTop()
-        )
-
-
-        stopImageView = ImageView(context)
-        stopImageView.id = View.generateViewId()
-        stopImageView.setBackgroundColor(ColorProvider.accentColor)
-        stopImageView.setImageResource(R.drawable.ic_baseline_stop_24)
-        stopImageView.scaleType = ImageView.ScaleType.CENTER_CROP
-        relativeLayout.addView(
-            stopImageView,
-            ParamsProvider.Relative.wrapContent()
-                .below(topImageView.id)
-                .centerInParent()
-                .margins(SizeProvider.generalMargin)
-        )
-
-        leftImageView = ImageView(context)
-        leftImageView.setBackgroundColor(ColorProvider.accentColor)
-
-        leftImageView.id = View.generateViewId()
-        leftImageView.setImageResource(R.drawable.ic_baseline_arrow_24)
-        leftImageView.rotation = 180f
-        relativeLayout.addView(
-            leftImageView,
-            ParamsProvider.Relative.wrapContent()
-                .toStartOf(stopImageView.id)
-                .centerVertical()
-        )
-
-
-        rightImageView = ImageView(context)
-        rightImageView.id = View.generateViewId()
-        rightImageView.setBackgroundColor(ColorProvider.accentColor)
-        rightImageView.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_baseline_arrow_24))
-        relativeLayout.addView(
-            rightImageView,
-            ParamsProvider.Relative.wrapContent()
-                .toEndOf(stopImageView.id)
-                .centerVertical()
-        )
-
-        bottomImageView = ImageView(context)
-        bottomImageView.setBackgroundColor(ColorProvider.accentColor)
-        bottomImageView.setImageResource(R.drawable.ic_baseline_arrow_24)
-        bottomImageView.rotation = 90f
-        relativeLayout.addView(
-            bottomImageView,
-            ParamsProvider.Relative.wrapContent()
-                .below(stopImageView.id)
-                .centerHorizontal()
-        )
-
-
-        if (mSocket != null){
-            if (mSocket!!.isConnected){
-                conditionTextView.text = StringProvider.theConnectionIsAvailable
-            }
-        }else{
-            conditionTextView.text = StringProvider.noConncetionAvailable
-            conditionTextView.setOnClickListener {
-                handleBluetooth()
-            }
-        }
-
         bottomSheet = BottomSheetDialog(context)
 
+        containerLinearLayout = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(ColorProvider.white)
 
-        topImageView.setOnClickListener {
-            sendCommand(Command.FORWARD.value())
-        }
+            titleTextView = GeneralTextView(context).apply {
+                setTextSizeInPixel(SizeProvider.titleTextSize)
+                gravity = Gravity.CENTER
+            }
+            addView(
+                titleTextView,
+                ParamsProvider.Linear.defaultParams()
+                    .margins(
+                        SizeProvider.dpToPx(16)
+                    )
+            )
 
-        leftImageView.setOnClickListener {
-            sendCommand(Command.TURNLEFT.value())
-        }
+            lineView = View(context).apply {
+                setBackgroundColor(ColorProvider.dividerColor)
+            }
+            addView(
+                lineView,
+                ParamsProvider.Linear.get(
+                    ParamsProvider.MATCH,
+                    SizeProvider.dpToPx(1)
+                )
+            )
 
-        rightImageView.setOnClickListener {
-            sendCommand(Command.TURNRIGHT.value())
-        }
+            recyclerView = RecyclerView(context).apply {
+                layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+                setPadding(
+                    SizeProvider.generalPadding / 2
+                )
+                clipToPadding = false
+                adapter = rvAdapter
+            }
+            addView(
+                recyclerView,
+                ParamsProvider.Linear.availableHeightParams()
+            )
 
-        bottomImageView.setOnClickListener {
-            sendCommand(Command.BACKWARD.value())
+
+            lineView2 = View(context).apply {
+                setBackgroundColor(ColorProvider.dividerColor)
+            }
+            addView(
+                lineView2,
+                ParamsProvider.Linear.get(
+                    ParamsProvider.MATCH,
+                    SizeProvider.dpToPx(1)
+                )
+            )
+
+            statusButton = GeneralTextView(context).apply {
+                setPadding(
+                    SizeProvider.dpToPx(16)
+                )
+                gravity = Gravity.CENTER
+                setTextColor(ColorProvider.secondaryTextColor)
+                text = StringProvider.clickToUpdate
+                background = DrawableBuilder()
+                    .solidColor(ColorProvider.primaryColor)
+                    .ripple()
+                    .rippleColor(ColorProvider.dividerColor)
+                    .cornerRadius(SizeProvider.dpToPx(12))
+                    .build()
+
+                setOnClickListener {
+                    updateStatus()
+                }
+            }
+            addView(
+                statusButton,
+                ParamsProvider.Linear.defaultParams()
+                    .margins(
+                        SizeProvider.dpToPx(16),
+                        SizeProvider.dpToPx(16),
+                        SizeProvider.dpToPx(16),
+                        SizeProvider.dpToPx(16),
+                    )
+            )
+
         }
-        stopImageView.setOnClickListener {
-            sendCommand(Command.STOP.value())
-        }
+        addView(
+            containerLinearLayout,
+            ParamsProvider.Frame.fullScreen()
+        )
+
+
 
     }
 
-    fun handleBluetooth(){
+    private fun updateStatus() {
+        if (mSocket == null){
+            titleTextView.text = StringProvider.noConncetionAvailable
+            handleBluetooth()
+        }else{
+            titleTextView.text = StringProvider.theConnectionIsAvailable
+        }
+    }
+
+    private fun handleBluetooth(){
         val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         if (mBluetoothAdapter == null){
             ToastManager.showErrorMessage(
@@ -238,12 +191,20 @@ class ControllerView(context: Context) : FrameLayout(context) {
                 override fun onItemClick(position: Int) {
                     if (connectToChosenDevice(deviceList[position])){
                         //TODO setupController to send command
-                        connectedThread = ConnectedThread(mSocket)
-                        connectedThread!!.start()
-                        conditionTextView.text = StringProvider.connectIsuccess
-                        conditionTextView.setOnClickListener {
-                            Log.d(TAG, "onItemClick: send commnad")
-                            sendCommand("Test")
+                        mSocket?.let { bluetoothSocket ->
+                            ConnectedThreadHelper.initialConnectedThread(bluetoothSocket)
+                            ConnectedThreadHelper.addOnSubscriber {
+                                val model = when(Integer.parseInt(it.trim())){
+                                    RFIDModel.RFID_STOP_MOTION.flag -> RFIDModel.RFID_STOP_MOTION
+                                    RFIDModel.RFID_TURN_LEFT.flag -> RFIDModel.RFID_TURN_LEFT
+                                    RFIDModel.RFID_TURN_RIGHT.flag -> RFIDModel.RFID_TURN_RIGHT
+                                    RFIDModel.RFID_SPEED_UP.flag -> RFIDModel.RFID_SPEED_UP
+                                    RFIDModel.RFID_SPEED_DOWN.flag -> RFIDModel.RFID_SPEED_DOWN
+                                    else -> RFIDModel.RFID_NO_TAG_READ
+                                }
+                                rvAdapter.data.add(model)
+                                rvAdapter.notifyDataSetChanged()
+                            }
                         }
                     }
                     bottomSheet.dismiss()
@@ -256,7 +217,7 @@ class ControllerView(context: Context) : FrameLayout(context) {
     }
 
     private fun sendCommand(command: String) {
-        if (mSocket != null) connectedThread?.write(command.toByteArray())
+        ConnectedThreadHelper.write(command.toByteArray())
     }
 
     private fun connectToChosenDevice(bluetoothDevice: BluetoothDevice): Boolean {
@@ -270,6 +231,8 @@ class ControllerView(context: Context) : FrameLayout(context) {
                     StringProvider.connectSuccess,
                     this
                 )
+                titleTextView.text = StringProvider.theConnectionIsAvailable
+
             } catch (e: Exception) {
                 Log.d(TAG, "connectToChosenDevice: ${e.toString()}")
                 try {

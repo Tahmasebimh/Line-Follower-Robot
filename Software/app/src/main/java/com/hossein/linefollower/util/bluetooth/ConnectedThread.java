@@ -14,21 +14,26 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
 public class ConnectedThread extends Thread {
     private interface MessageConstants {
-        public static final int MESSAGE_READ = 0;
-        public static final int MESSAGE_WRITE = 1;
-        public static final int MESSAGE_TOAST = 2;
-
-        // ... (Add other message types here as needed.)
+        int MESSAGE_READ = 0;
+        int MESSAGE_WRITE = 1;
+        int MESSAGE_TOAST = 2;
     }
 
+    public interface PublishInterface{
+        void onMessage(String message);
+    }
+
+    private final ArrayList<PublishInterface> messageListeners = new ArrayList<>();
+
     private static final String TAG = "MY_APP_DEBUG_TAG";
-    private Handler mHandler;
-    private BluetoothSocket sockettargetModule;
-    private InputStream mmInStream;
-    private OutputStream mmOutStream;
+    private final Handler mHandler;
+    private final BluetoothSocket sockettargetModule;
+    private final InputStream mmInStream;
+    private final OutputStream mmOutStream;
     private byte[] mmBuffer;
     private String receiverMessage = "";
     public ConnectedThread(BluetoothSocket bluetoothSocket) {
@@ -46,10 +51,7 @@ public class ConnectedThread extends Thread {
                     Log.d(TAG, "handleMessage: Temp is : " + temp);
                     receiverMessage += temp;
                     Log.d(TAG, "handleMessage: Message is : " + receiverMessage);
-//                    if (receiverMessage.contains("#")){
-//                        Log.d(TAG, "handleMessage: message is : " + receiverMessage);
-//                        receiverMessage = "";
-//                    }
+                    broadCastMessage(receiverMessage);
                     receiverMessage = "";
                 }
             }
@@ -68,6 +70,14 @@ public class ConnectedThread extends Thread {
         }
         mmInStream = tmpIn;
         mmOutStream = tmpOut;
+    }
+
+    private void broadCastMessage(String receiverMessage) {
+        if (!messageListeners.isEmpty()){
+            for (PublishInterface publishInterface: messageListeners){
+                publishInterface.onMessage(receiverMessage);
+            }
+        }
     }
 
     @Override
@@ -125,4 +135,10 @@ public class ConnectedThread extends Thread {
             mHandler.sendMessage(writeErrorMsg);
         }
     }
+
+
+    void addOnPublisherListener(PublishInterface publishInterface){
+        messageListeners.add(publishInterface);
+    }
+
 }

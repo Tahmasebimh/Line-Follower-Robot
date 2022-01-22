@@ -6,6 +6,7 @@ import com.hossein.linefollower.util.ApplicationContextHolder
 
 object SizeProvider {
 
+    val titleTextSize: Int = dpToPx(18)
     val lineHeight: Int = dpToPx(1)
     val generalTextSize: Int = dpToPx(16)
     val generalMargin: Int = dpToPx(10)
