@@ -190,7 +190,6 @@ class ControllerView(context: Context) : FrameLayout(context) {
             object : SetOnItemClickListener {
                 override fun onItemClick(position: Int) {
                     if (connectToChosenDevice(deviceList[position])){
-                        //TODO setupController to send command
                         mSocket?.let { bluetoothSocket ->
                             ConnectedThreadHelper.initialConnectedThread(bluetoothSocket)
                             ConnectedThreadHelper.addOnSubscriber {
