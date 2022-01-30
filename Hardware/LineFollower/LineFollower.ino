@@ -23,10 +23,10 @@ const uint8_t IN3 = 6;
 const uint8_t IN4 = 7;
 
 
-const uint8_t MINSPEED = 120;
-const uint8_t NORMALSPEED = 120;
-const uint8_t MAXSPEED = 160;
-uint8_t TURNSPEED = 240;
+const uint8_t MINSPEED = 50;
+const uint8_t NORMALSPEED = 70;
+const uint8_t MAXSPEED = 90;
+uint8_t TURNSPEED = 90;
 uint8_t SELECTEDSPEED = NORMALSPEED;
 const uint8_t delay_time = 0;
 
@@ -116,7 +116,7 @@ void loop() {
 
   
    readIRSensorsDatas();
-   if(irr == LOW && irl == LOW){
+   if((irr == LOW && irl == LOW) || (irr == HIGH && irc == HIGH) || (irl == HIGH && irc == HIGH)){
         //go Forward 
       driver.forward(NORMALSPEED, 0);
       //goForward();

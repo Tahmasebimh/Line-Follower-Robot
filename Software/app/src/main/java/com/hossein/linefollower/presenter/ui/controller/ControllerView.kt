@@ -118,7 +118,7 @@ class ControllerView(context: Context) : FrameLayout(context) {
                     SizeProvider.dpToPx(16)
                 )
                 gravity = Gravity.CENTER
-                setTextColor(ColorProvider.secondaryTextColor)
+                setTextColor(ColorProvider.textIconMainColor)
                 text = StringProvider.clickToUpdate
                 background = DrawableBuilder()
                     .solidColor(ColorProvider.primaryColor)
@@ -129,6 +129,7 @@ class ControllerView(context: Context) : FrameLayout(context) {
 
                 setOnClickListener {
                     updateStatus()
+                    handleBluetooth()
                 }
             }
             addView(
@@ -141,7 +142,7 @@ class ControllerView(context: Context) : FrameLayout(context) {
                         SizeProvider.dpToPx(16),
                     )
             )
-
+            updateStatus()
         }
         addView(
             containerLinearLayout,
@@ -149,13 +150,11 @@ class ControllerView(context: Context) : FrameLayout(context) {
         )
 
 
-
     }
 
     private fun updateStatus() {
         if (mSocket == null){
             titleTextView.text = StringProvider.noConncetionAvailable
-            handleBluetooth()
         }else{
             titleTextView.text = StringProvider.theConnectionIsAvailable
         }

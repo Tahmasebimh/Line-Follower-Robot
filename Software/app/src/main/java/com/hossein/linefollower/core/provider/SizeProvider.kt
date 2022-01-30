@@ -14,6 +14,11 @@ object SizeProvider {
     val generalPadding : Int = dpToPx(15)
 
 
+    fun getDisplaySizeWidth(): Int? {
+        return ApplicationContextHolder.application?.resources?.displayMetrics?.widthPixels
+    }
+
+
     fun dpToPx(dp: Int): Int {
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), ApplicationContextHolder.application?.resources?.displayMetrics).toInt()
     }

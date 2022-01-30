@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+
     <application
         android:name=".core.application.App"
         android:allowBackup="true"
@@ -12,15 +13,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.LineFollowerRobotApplication">
-        <activity android:name="com.hossein.linefollower.presenter.ui.main.MainActivity">
+        <activity android:name=".presenter.ui.splash.SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".presenter.ui.main.MainActivity">
 
-        <activity android:name="com.hossein.linefollower.presenter.ui.controller.ControllerActivity"/>
+        </activity>
+        <activity android:name=".presenter.ui.controller.ControllerActivity" />
     </application>
 
 </manifest>
