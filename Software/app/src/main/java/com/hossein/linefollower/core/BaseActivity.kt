@@ -10,7 +10,6 @@ abstract class BaseActivity: AppCompatActivity() {
     protected val context = this
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d("MainActivity>>", "onCreate: 11")
         setContentView(setupPage())
     }
 

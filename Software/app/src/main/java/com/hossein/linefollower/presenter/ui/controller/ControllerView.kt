@@ -23,6 +23,8 @@ import com.hossein.linefollower.presenter.calback.SetOnItemClickListener
 import com.hossein.linefollower.presenter.customview.textview.GeneralTextView
 import com.hossein.linefollower.presenter.ui.controller.adapter.LogRVAdapter
 import com.hossein.linefollower.presenter.ui.controller.view.ChooseBTDeviceBottomSheetView
+import com.hossein.linefollower.presenter.ui.controller.view.CustomToolBar
+import com.hossein.linefollower.presenter.ui.settings.SettingsActivity
 import com.hossein.linefollower.util.bluetooth.ConnectedThreadHelper
 import com.hossein.linefollower.util.rfid.RFIDModel
 import com.hossein.linefollower.util.toast.ToastManager
@@ -42,8 +44,7 @@ class ControllerView(context: Context) : FrameLayout(context) {
 
     private lateinit var containerLinearLayout: LinearLayout
 
-    private lateinit var titleTextView: GeneralTextView
-    private lateinit var lineView: View
+    private lateinit var customToolBar: CustomToolBar
 
     private lateinit var recyclerView: RecyclerView
 
@@ -65,28 +66,12 @@ class ControllerView(context: Context) : FrameLayout(context) {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(ColorProvider.white)
 
-            titleTextView = GeneralTextView(context).apply {
-                setTextSizeInPixel(SizeProvider.titleTextSize)
-                gravity = Gravity.CENTER
-            }
+            customToolBar = CustomToolBar(context, CustomToolBar.ToolBarType.SETTING_TOOLBAR)
             addView(
-                titleTextView,
+                customToolBar,
                 ParamsProvider.Linear.defaultParams()
-                    .margins(
-                        SizeProvider.dpToPx(16)
-                    )
             )
 
-            lineView = View(context).apply {
-                setBackgroundColor(ColorProvider.dividerColor)
-            }
-            addView(
-                lineView,
-                ParamsProvider.Linear.get(
-                    ParamsProvider.MATCH,
-                    SizeProvider.dpToPx(1)
-                )
-            )
 
             recyclerView = RecyclerView(context).apply {
                 layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
@@ -143,20 +128,24 @@ class ControllerView(context: Context) : FrameLayout(context) {
                     )
             )
             updateStatus()
+
         }
         addView(
             containerLinearLayout,
             ParamsProvider.Frame.fullScreen()
         )
 
+        customToolBar.settingIcon.setOnClickListener {
+            context.startActivity(SettingsActivity.newIntent(context))
+        }
 
     }
 
     private fun updateStatus() {
         if (mSocket == null){
-            titleTextView.text = StringProvider.noConncetionAvailable
+            customToolBar.titleTextView.text = StringProvider.noConncetionAvailable
         }else{
-            titleTextView.text = StringProvider.theConnectionIsAvailable
+            customToolBar.titleTextView.text = StringProvider.theConnectionIsAvailable
         }
     }
 
@@ -192,16 +181,18 @@ class ControllerView(context: Context) : FrameLayout(context) {
                         mSocket?.let { bluetoothSocket ->
                             ConnectedThreadHelper.initialConnectedThread(bluetoothSocket)
                             ConnectedThreadHelper.addOnSubscriber {
-                                val model = when(Integer.parseInt(it.trim())){
-                                    RFIDModel.RFID_STOP_MOTION.flag -> RFIDModel.RFID_STOP_MOTION
-                                    RFIDModel.RFID_TURN_LEFT.flag -> RFIDModel.RFID_TURN_LEFT
-                                    RFIDModel.RFID_TURN_RIGHT.flag -> RFIDModel.RFID_TURN_RIGHT
-                                    RFIDModel.RFID_SPEED_UP.flag -> RFIDModel.RFID_SPEED_UP
-                                    RFIDModel.RFID_SPEED_DOWN.flag -> RFIDModel.RFID_SPEED_DOWN
-                                    else -> RFIDModel.RFID_NO_TAG_READ
+                                if (it.startsWith("TAG")){
+                                    val model = when(Integer.parseInt(it.split("_")[1].trim())){
+                                        RFIDModel.RFID_STOP_MOTION.flag -> RFIDModel.RFID_STOP_MOTION
+                                        RFIDModel.RFID_TURN_LEFT.flag -> RFIDModel.RFID_TURN_LEFT
+                                        RFIDModel.RFID_TURN_RIGHT.flag -> RFIDModel.RFID_TURN_RIGHT
+                                        RFIDModel.RFID_SPEED_UP.flag -> RFIDModel.RFID_SPEED_UP
+                                        RFIDModel.RFID_SPEED_DOWN.flag -> RFIDModel.RFID_SPEED_DOWN
+                                        else -> RFIDModel.RFID_NO_TAG_READ
+                                    }
+                                    rvAdapter.data.add(model)
+                                    rvAdapter.notifyDataSetChanged()
                                 }
-                                rvAdapter.data.add(model)
-                                rvAdapter.notifyDataSetChanged()
                             }
                         }
                     }
@@ -229,7 +220,7 @@ class ControllerView(context: Context) : FrameLayout(context) {
                     StringProvider.connectSuccess,
                     this
                 )
-                titleTextView.text = StringProvider.theConnectionIsAvailable
+                customToolBar.titleTextView.text = StringProvider.theConnectionIsAvailable
 
             } catch (e: Exception) {
                 Log.d(TAG, "connectToChosenDevice: ${e.toString()}")

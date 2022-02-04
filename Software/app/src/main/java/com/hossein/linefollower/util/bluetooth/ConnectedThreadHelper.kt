@@ -1,6 +1,7 @@
 package com.hossein.linefollower.util.bluetooth
 
 import android.bluetooth.BluetoothSocket
+import android.util.Log
 
 object ConnectedThreadHelper {
 
@@ -15,6 +16,7 @@ object ConnectedThreadHelper {
     }
 
     fun write(message: ByteArray) {
+        Log.d("ConnectedThreadHelper>>", "write: ${String(message)}")
         connectedThread?.write(message)
     }
 

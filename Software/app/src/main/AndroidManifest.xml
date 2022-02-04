@@ -13,6 +13,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.LineFollowerRobotApplication">
+        <activity
+            android:name=".presenter.ui.settings.SettingsActivity"
+            android:windowSoftInputMode="adjustResize|adjustPan" />
         <activity android:name=".presenter.ui.splash.SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -20,9 +23,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".presenter.ui.main.MainActivity">
-
-        </activity>
+        <activity android:name=".presenter.ui.main.MainActivity" />
         <activity android:name=".presenter.ui.controller.ControllerActivity" />
     </application>
 

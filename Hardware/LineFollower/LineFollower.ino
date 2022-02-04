@@ -3,10 +3,6 @@
 #include <SPI.h>
 #include <MFRC522.h>
 
-//Global variable
-bool runPermit = true;
-
-
 //blutooth setup
 SoftwareSerial Bluetooth(0, 1); // RX | TX
 
@@ -25,8 +21,8 @@ const uint8_t IN4 = 7;
 
 const uint8_t MINSPEED = 50;
 const uint8_t NORMALSPEED = 70;
-const uint8_t MAXSPEED = 90;
-uint8_t TURNSPEED = 90;
+const uint8_t MAXSPEED = 110;
+uint8_t TURNSPEED = 110;
 uint8_t SELECTEDSPEED = NORMALSPEED;
 const uint8_t delay_time = 0;
 
@@ -41,11 +37,10 @@ const uint8_t IR_L = 2;
 //If IR vlaue top of 512 -> Its black
 const int irMidRange = 512;
 //IR sensor values
-uint8_t irr;
-uint8_t irl;
-uint8_t irc;
-
-
+int irData[] = {0, 0, 0, 0, 0};
+//premit move
+enum RunMode  { Move, Stop, TurnLeft, TurnRight};
+RunMode runMode = RunMode::Stop;
 
 //RFID Setup
 #define RST_PIN         9           // Configurable, see typical pin layout above
@@ -75,12 +70,7 @@ void setup() {
   Bluetooth.begin(9600);
   Serial.begin(9600);
   Bluetooth.setTimeout(300);
-/*
-  pinMode(IN1, OUTPUT);
-  pinMode(IN2, OUTPUT);
-  pinMode(IN3, OUTPUT);
-  pinMode(IN4, OUTPUT);
-*/
+
   SPI.begin();        // Init SPI bus
   mfrc522.PCD_Init(); // Init MFRC522 card
   
@@ -93,9 +83,34 @@ void loop() {
   // put your main code here, to run repeatedly:
   if (Bluetooth.available()){
       //This scope will accesable when sth received by bluetooth module
-      //String input = Bluetooth.readString();
-      
+      String input = Bluetooth.readString();
+      if(input.startsWith("DIRECTION")){
+        if(input.indexOf("FORWARD") != -1){
+          driver.forward(SELECTEDSPEED, 0);
+        }else if(input.indexOf("LEFT") != -1){
+          driver.left(TURNSPEED
+          , 0);
+        }else if(input.indexOf("RIGHT") != -1){
+          driver.right(TURNSPEED, 0);
+        }else if(input.indexOf("BACKWARD") != -1){
+          driver.backward(SELECTEDSPEED, 0);
+        }
+        delay(1500);
+        driver.stop();  
+      }else if(input.startsWith("SPEED")){
+          String speedType = input.substring(input.indexOf("_") + 1, input.length());
+        if(speedType == "1"){
+            SELECTEDSPEED = NORMALSPEED;
+        }else if(speedType == "2"){
+            SELECTEDSPEED = MAXSPEED;
+        }else{
+            SELECTEDSPEED = speedType.toInt();
+        }
+        Serial.print("Speed now: " + String(SELECTEDSPEED));
+        TURNSPEED = SELECTEDSPEED + 30;
+      }
    }
+   
    //RFID Code: 
    if (mfrc522.PICC_IsNewCardPresent()){
       if (mfrc522.PICC_ReadCardSerial()){
@@ -114,40 +129,22 @@ void loop() {
         }
    }
 
-  
+   //IR Sensors
    readIRSensorsDatas();
-   if((irr == LOW && irl == LOW) || (irr == HIGH && irc == HIGH) || (irl == HIGH && irc == HIGH)){
-        //go Forward 
-      driver.forward(NORMALSPEED, 0);
-      //goForward();
-   }else if(irr == HIGH && irl == LOW){
-         //turn right
-      do{
-        driver.right(TURNSPEED, 0);
-        //goRight();
-        readIRSensorsDatas();
-        }while(irc != HIGH);      
-
-   }else if(irr == LOW && irl == HIGH){
-         //turn left   
-      do{
-          //goLeft();
-          driver.left(TURNSPEED, 0);
-          readIRSensorsDatas();          
-      }while(irc != HIGH);
-   }else if(irr == HIGH && irl == HIGH){
-      driver.stop(0);
-     //goStop(); 
-     //stop 
-   }
+   if(runMode == RunMode::Move){
+     if(irData[0] == HIGH){
+      
+      }
+  }
+  
    //END LOOP
 }
 
 //Go forward function
 void goForward(){
   
-    analogWrite(ENA, NORMALSPEED);
-    analogWrite(ENB, NORMALSPEED);
+    analogWrite(ENA, SELECTEDSPEED);
+    analogWrite(ENB, SELECTEDSPEED);
     
     digitalWrite(IN1, HIGH);
     digitalWrite(IN2, LOW);
@@ -157,10 +154,10 @@ void goForward(){
 }
 
 //Go right fuctoin
-void goRight(){
+void goForwardRight(){
   
-    analogWrite(ENA, MAXSPEED);
-    analogWrite(ENB, NORMALSPEED);
+    analogWrite(ENA, SELECTEDSPEED + 20);
+    analogWrite(ENB, SELECTEDSPEED);
     
     digitalWrite(IN1, HIGH);
     digitalWrite(IN2, LOW);
@@ -169,10 +166,10 @@ void goRight(){
     digitalWrite(IN4, LOW);
 } 
 //Go left function
-void goLeft(){
+void goForwardLeft(){
   
-    analogWrite(ENA, NORMALSPEED);
-    analogWrite(ENB, MAXSPEED);
+    analogWrite(ENA, SELECTEDSPEED);
+    analogWrite(ENB, SELECTEDSPEED + 20);
     
     digitalWrite(IN1, HIGH);
     digitalWrite(IN2, LOW);
@@ -210,14 +207,17 @@ int readBlock(int blockNumber, byte arrayAddress[])
 }
 
 void readIRSensorsDatas(){
-  irr = analogRead(IR_R) / irMidRange;
-  irl = analogRead(IR_L) / irMidRange;
-  irc = analogRead(IR_C) / irMidRange;
+  irData[0] = analogRead(0) / irMidRange;
+  irData[1] = analogRead(1) / irMidRange;
+  irData[2] = analogRead(2) / irMidRange;
+  irData[3] = analogRead(3) / irMidRange;
+  irData[4] = analogRead(4) / irMidRange;
 }
 
 void handleRFIDTagData(int data){
     //Serial.print("Data is : ");
-    Serial.println(data);
+    String output = "TAG_" + String(data);
+    Serial.println(output);
     switch(data){
       case RFID_NO_TAG_READ: 
         //Serial.println("No TAG read");
