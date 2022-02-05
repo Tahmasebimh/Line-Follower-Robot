@@ -14,12 +14,16 @@ import com.hossein.linefollower.presenter.customview.textview.GeneralTextView
 import com.hossein.linefollower.util.bluetooth.ConnectedThread
 import com.hossein.linefollower.util.bluetooth.ConnectedThreadHelper
 import com.hossein.linefollower.util.toast.ToastManager
+import top.defaults.drawabletoolbox.DrawableBuilder
 
 class ManualControllerVIew(context: Context) : LinearLayout(context) {
 
     private lateinit var titleTextView: GeneralTextView
 
+    private lateinit var forwardLinearLayout: LinearLayout
     private lateinit var forwardImageView: ImageView
+    private lateinit var forwardRightImageView: ImageView
+    private lateinit var forwardLeftImageView: ImageView
 
     private lateinit var sideLinearLayout: LinearLayout
     private lateinit var leftImageView: ImageView
@@ -47,25 +51,87 @@ class ManualControllerVIew(context: Context) : LinearLayout(context) {
                 )
         )
 
-        forwardImageView = ImageView(context).apply {
-            setImageResource(R.drawable.ic_baseline_arrow_upward_24)
-            setColorFilter(ColorProvider.white)
-            setBackgroundColor(ColorProvider.accentColor)
-            setOnClickListener {
-                ConnectedThreadHelper.write(
-                    DirectionCommand.FORWARD.value.toByteArray()
-                )
+        forwardLinearLayout = LinearLayout(context).apply {
+
+            gravity = Gravity.CENTER_HORIZONTAL
+
+            leftImageView = ImageView(context).apply {
+                setImageResource(R.drawable.ic_baseline_arrow_upward_24)
+                setColorFilter(ColorProvider.white)
+                background = DrawableBuilder()
+                    .solidColor(ColorProvider.accentColor)
+                    .rounded()
+                    .build()
+                rotation = -45f
+                setOnClickListener {
+                    ConnectedThreadHelper.write(
+                        DirectionCommand.FORWARD_LEFT.value.toByteArray()
+                    )
+                }
             }
+            addView(
+                leftImageView,
+                ParamsProvider.Linear.get(
+                    SizeProvider.dpToPx(52),
+                    SizeProvider.dpToPx(52)
+                ).margins(
+                    SizeProvider.dpToPx(8)
+                )
+            )
+
+            forwardImageView = ImageView(context).apply {
+                setImageResource(R.drawable.ic_baseline_arrow_upward_24)
+                setColorFilter(ColorProvider.white)
+                setBackgroundColor(ColorProvider.accentColor)
+                setOnClickListener {
+                    ConnectedThreadHelper.write(
+                        DirectionCommand.FORWARD.value.toByteArray()
+                    )
+                }
+            }
+            addView(
+                forwardImageView,
+                ParamsProvider.Linear.get(
+                    SizeProvider.dpToPx(52),
+                    SizeProvider.dpToPx(52)
+                ).margins(
+                    SizeProvider.dpToPx(8)
+                )
+            )
+
+            forwardRightImageView = ImageView(context).apply {
+                setImageResource(R.drawable.ic_baseline_arrow_upward_24)
+                setColorFilter(ColorProvider.white)
+                background = DrawableBuilder()
+                    .solidColor(ColorProvider.accentColor)
+                    .rounded()
+                    .build()
+                rotation = 45f
+                setOnClickListener {
+                    ConnectedThreadHelper.write(
+                        DirectionCommand.FORWARD_RIGHT.value.toByteArray()
+                    )
+                }
+            }
+            addView(
+                forwardRightImageView,
+                ParamsProvider.Linear.get(
+                    SizeProvider.dpToPx(52),
+                    SizeProvider.dpToPx(52)
+                ).margins(
+                    SizeProvider.dpToPx(8)
+                )
+            )
+
+
+
         }
         addView(
-            forwardImageView,
-            ParamsProvider.Linear.get(
-                SizeProvider.dpToPx(52),
-                SizeProvider.dpToPx(52)
-            ).margins(
-                SizeProvider.dpToPx(8)
-            )
+            forwardLinearLayout,
+            ParamsProvider.Linear.defaultParams()
         )
+
+
 
         sideLinearLayout = LinearLayout(context).apply {
 

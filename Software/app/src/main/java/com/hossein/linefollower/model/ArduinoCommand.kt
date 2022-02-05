@@ -12,6 +12,8 @@ enum class SpeedCommand(val speed: Speed){
 
 enum class DirectionCommand(val value: String){
     FORWARD("DIRECTION_FORWARD"),
+    FORWARD_RIGHT("DIRECTION_FORWARD_RIGHT"),
+    FORWARD_LEFT("DIRECTION_FORWARD_LEFT"),
     RIGHT("DIRECTION_RIGHT"),
     LEFT("DIRECTION_LEFT"),
     BACKWARD("DIRECTION_BACKWARD");

@@ -19,10 +19,10 @@ const uint8_t IN3 = 6;
 const uint8_t IN4 = 7;
 
 
-const uint8_t MINSPEED = 50;
-const uint8_t NORMALSPEED = 70;
-const uint8_t MAXSPEED = 110;
-uint8_t TURNSPEED = 110;
+const uint8_t MINSPEED = 70;
+const uint8_t NORMALSPEED = 90;
+const uint8_t MAXSPEED = 130;
+uint8_t TURNSPEED = 130;
 uint8_t SELECTEDSPEED = NORMALSPEED;
 const uint8_t delay_time = 0;
 
@@ -40,7 +40,7 @@ const int irMidRange = 512;
 int irData[] = {0, 0, 0, 0, 0};
 //premit move
 enum RunMode  { Move, Stop, TurnLeft, TurnRight};
-RunMode runMode = RunMode::Stop;
+RunMode runMode = RunMode::Move;
 
 //RFID Setup
 #define RST_PIN         9           // Configurable, see typical pin layout above
@@ -82,15 +82,18 @@ void loop() {
       //This scope will accesable when sth received by bluetooth module
       String input = Bluetooth.readString();
       if(input.startsWith("DIRECTION")){
-        if(input.indexOf("FORWARD") != -1){
-          driver.forward(SELECTEDSPEED, 0);
+        if(input.indexOf("FORWARD_RIGHT") != -1){
+          goForwardRight();
+        }else if(input.indexOf("FORWARD_LEFT") != -1){
+          goForwardLeft();
         }else if(input.indexOf("LEFT") != -1){
-          driver.left(TURNSPEED
-          , 0);
+          driver.left(TURNSPEED, 0);
         }else if(input.indexOf("RIGHT") != -1){
           driver.right(TURNSPEED, 0);
         }else if(input.indexOf("BACKWARD") != -1){
           driver.backward(SELECTEDSPEED, 0);
+        }else if(input.indexOf("FORWARD") != -1){
+          goForward();
         }
         delay(1500);
         driver.stop();  
@@ -128,29 +131,37 @@ void loop() {
 
    //IR Sensors
    readIRSensorsDatas();
-   if(runMode == RunMode::Move){
+   if(runMode != RunMode::Stop){
      if(irData[0] == LOW && irData[1] == LOW && irData[3] == LOW && irData[4] == LOW){
         //nothing viewed -> Forward()
         goForward();
-      }else if(irData[1] == HIGH){
-        goForwardRight();
-      }else if(irData[3] == HIGH){
-        goForwardLeft();  
+      }else if(irData[1] == HIGH  && irData[2] == LOW){
+        do{
+          goForwardRight();       
+          readIRSensorsDatas();
+        }while(irData[2] != HIGH && irData[0] != HIGH && irData[4] != HIGH);
+      }else if(irData[3] == HIGH && irData[2] == LOW){
+        do{
+          goForwardLeft();  
+          readIRSensorsDatas();
+        }while(irData[2] != HIGH && irData[0] != HIGH && irData[4] != HIGH);
       }else if(irData[0] == HIGH && irData[2] == LOW){
         do{
           turnRight();
           readIRSensorsDatas();
-        }while(irData[2] == HIGH);  
+        }while(irData[2] != HIGH);  
       }else if(irData[4] == HIGH && irData[2] == LOW){
         do{
           turnLeft();
           readIRSensorsDatas();
-        }while(irData[2] == HIGH); 
+        }while(irData[2] != HIGH); 
       }else if(irData[2] == HIGH){
         goForward();
       }else{
         goStop();
       }
+  }else{
+    goStop();  
   }
   
    //END LOOP
@@ -179,29 +190,34 @@ void goForward(){
 
 //Go right fuctoin
 void goForwardRight(){
-  
-    analogWrite(ENA, SELECTEDSPEED + 20);
-    analogWrite(ENB, SELECTEDSPEED);
+    if(SELECTEDSPEED + (SELECTEDSPEED * 0.5) > 255){
+      analogWrite(ENA, 255);      
+    }else{
+      analogWrite(ENA, SELECTEDSPEED + (SELECTEDSPEED * 0.5));      
+    }
+    analogWrite(ENB, SELECTEDSPEED * 0.2);
     
     digitalWrite(IN1, HIGH);
     digitalWrite(IN2, LOW);
 
     digitalWrite(IN3, HIGH);
     digitalWrite(IN4, LOW);
-    delay(100);
 } 
 //Go left function
 void goForwardLeft(){
-  
-    analogWrite(ENA, SELECTEDSPEED);
-    analogWrite(ENB, SELECTEDSPEED + 20);
+    
+    analogWrite(ENA, SELECTEDSPEED * 0.2);
+    if(SELECTEDSPEED + (SELECTEDSPEED * 0.5) > 255){
+       analogWrite(ENB, 255);      
+    }else{
+       analogWrite(ENB, SELECTEDSPEED + (SELECTEDSPEED * 0.5));
+    }
     
     digitalWrite(IN1, HIGH);
     digitalWrite(IN2, LOW);
 
     digitalWrite(IN3, HIGH);
     digitalWrite(IN4, LOW);
-    delay(100);
 }
 //Stop
 void goStop(){
