@@ -63,9 +63,6 @@ const int RFID_SPEED_DOWN  = 5;
 //BLT Value With android
 
 
-
-
-
 void setup() {
   Bluetooth.begin(9600);
   Serial.begin(9600);
@@ -132,12 +129,39 @@ void loop() {
    //IR Sensors
    readIRSensorsDatas();
    if(runMode == RunMode::Move){
-     if(irData[0] == HIGH){
-      
+     if(irData[0] == LOW && irData[1] == LOW && irData[3] == LOW && irData[4] == LOW){
+        //nothing viewed -> Forward()
+        goForward();
+      }else if(irData[1] == HIGH){
+        goForwardRight();
+      }else if(irData[3] == HIGH){
+        goForwardLeft();  
+      }else if(irData[0] == HIGH && irData[2] == LOW){
+        do{
+          turnRight();
+          readIRSensorsDatas();
+        }while(irData[2] == HIGH);  
+      }else if(irData[4] == HIGH && irData[2] == LOW){
+        do{
+          turnLeft();
+          readIRSensorsDatas();
+        }while(irData[2] == HIGH); 
+      }else if(irData[2] == HIGH){
+        goForward();
+      }else{
+        goStop();
       }
   }
   
    //END LOOP
+}
+
+void readIRSensorsDatas(){
+  irData[0] = analogRead(0) / irMidRange;
+  irData[1] = analogRead(1) / irMidRange;
+  irData[2] = analogRead(2) / irMidRange;
+  irData[3] = analogRead(3) / irMidRange;
+  irData[4] = analogRead(4) / irMidRange;
 }
 
 //Go forward function
@@ -164,6 +188,7 @@ void goForwardRight(){
 
     digitalWrite(IN3, HIGH);
     digitalWrite(IN4, LOW);
+    delay(100);
 } 
 //Go left function
 void goForwardLeft(){
@@ -176,6 +201,7 @@ void goForwardLeft(){
 
     digitalWrite(IN3, HIGH);
     digitalWrite(IN4, LOW);
+    delay(100);
 }
 //Stop
 void goStop(){
@@ -189,6 +215,18 @@ void goStop(){
     digitalWrite(IN3, LOW);
     digitalWrite(IN4, LOW);
 }
+
+void turnLeft(){
+  
+  driver.left(TURNSPEED, 0);
+}
+
+void turnRight(){
+  
+  driver.right(TURNSPEED, 0);
+}
+
+
 
 int readBlock(int blockNumber, byte arrayAddress[]) 
 {
@@ -206,13 +244,7 @@ int readBlock(int blockNumber, byte arrayAddress[])
   }
 }
 
-void readIRSensorsDatas(){
-  irData[0] = analogRead(0) / irMidRange;
-  irData[1] = analogRead(1) / irMidRange;
-  irData[2] = analogRead(2) / irMidRange;
-  irData[3] = analogRead(3) / irMidRange;
-  irData[4] = analogRead(4) / irMidRange;
-}
+
 
 void handleRFIDTagData(int data){
     //Serial.print("Data is : ");
@@ -224,6 +256,7 @@ void handleRFIDTagData(int data){
         break;
       case RFID_STOP_MOTION:
         //Serial.println("Stop TAG");
+        runMode = RunMode::Stop;
         break;
       case RFID_TURN_LEFT: 
         //Serial.println("Turn left TAG");
@@ -233,9 +266,11 @@ void handleRFIDTagData(int data){
         break;
       case RFID_SPEED_UP: 
         //Serial.println("Speed up TAG");
+        SELECTEDSPEED = MAXSPEED;
         break;
       case RFID_SPEED_DOWN: 
         //Serial.println("Speed down TAG");
+        SELECTEDSPEED = NORMALSPEED;
         break;
       default: 
         //Serial.println("Unknown TAG");
