@@ -3,6 +3,11 @@
 Created: January 14, 2022 1:33 PM
 Tags: BSC Project
 
+# Schematic:
+
+![Schematic_bb.jpg](Assets/Schematic_bb.jpg)
+
+
 # RFID:
 
 ## Pin document:

@@ -19,7 +19,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.hossein.linefollower.R
 import com.hossein.linefollower.core.provider.*
+import com.hossein.linefollower.model.MovementCommand
 import com.hossein.linefollower.presenter.calback.SetOnItemClickListener
+import com.hossein.linefollower.presenter.customview.iconview.CardIconView
 import com.hossein.linefollower.presenter.customview.textview.GeneralTextView
 import com.hossein.linefollower.presenter.ui.controller.adapter.LogRVAdapter
 import com.hossein.linefollower.presenter.ui.controller.view.ChooseBTDeviceBottomSheetView
@@ -46,7 +48,11 @@ class ControllerView(context: Context) : FrameLayout(context) {
 
     private lateinit var customToolBar: CustomToolBar
 
+    private lateinit var listContainerFrameLayout: FrameLayout
     private lateinit var recyclerView: RecyclerView
+    private lateinit var maskFrameLayout: FrameLayout
+    private lateinit var startStopIconView: CardIconView
+    var isRobotMoving: Boolean = false
 
     private lateinit var lineView2: View
     private lateinit var statusButton: GeneralTextView
@@ -73,16 +79,65 @@ class ControllerView(context: Context) : FrameLayout(context) {
             )
 
 
-            recyclerView = RecyclerView(context).apply {
-                layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-                setPadding(
-                    SizeProvider.generalPadding / 2
+            listContainerFrameLayout = FrameLayout(context).apply {
+                recyclerView = RecyclerView(context).apply {
+                    layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+                    setPadding(
+                        SizeProvider.generalPadding / 2
+                    )
+                    clipToPadding = false
+                    adapter = rvAdapter
+                }
+                addView(
+                    recyclerView,
+                    ParamsProvider.Frame.fullScreen()
                 )
-                clipToPadding = false
-                adapter = rvAdapter
+
+                maskFrameLayout = FrameLayout(context).apply {
+                    startStopIconView = CardIconView(context).apply {
+                        iconView.setImageResource(R.drawable.ic_baseline_play_arrow_24)
+
+                        setOnClickListener {
+                            ConnectedThreadHelper.bluetoothSocket?.let {
+                                if (it.isConnected){
+                                    if (isRobotMoving){
+                                        ConnectedThreadHelper.write(
+                                            MovementCommand.STOP.value.toByteArray()
+                                        )
+                                        startStopIconView.iconView.setImageResource(R.drawable.ic_baseline_play_arrow_24)
+                                        maskFrameLayout.setBackgroundColor(Color.argb(100, 255, 255, 255))
+                                    }else{
+                                        ConnectedThreadHelper.write(
+                                            MovementCommand.START.value.toByteArray()
+                                        )
+                                        startStopIconView.iconView.setImageResource(R.drawable.ic_baseline_stop_24)
+                                        maskFrameLayout.setBackgroundColor(Color.TRANSPARENT)
+                                    }
+                                    isRobotMoving = !isRobotMoving
+                                }
+                            }
+                        }
+
+                    }
+                    addView(
+                        startStopIconView,
+                        ParamsProvider.Card.get(
+                            SizeProvider.dpToPx(54),
+                            SizeProvider.dpToPx(54),
+                        ).gravity(Gravity.BOTTOM)
+                            .margins(
+                                SizeProvider.dpToPx(24)
+                            )
+                    )
+                }
+                addView(
+                    maskFrameLayout,
+                    ParamsProvider.Frame.fullScreen()
+                )
+
             }
             addView(
-                recyclerView,
+                listContainerFrameLayout,
                 ParamsProvider.Linear.availableHeightParams()
             )
 

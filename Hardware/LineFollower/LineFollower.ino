@@ -40,7 +40,7 @@ const int irMidRange = 512;
 int irData[] = {0, 0, 0, 0, 0};
 //premit move
 enum RunMode  { Move, Stop, TurnLeft, TurnRight};
-RunMode runMode = RunMode::Move;
+RunMode runMode = RunMode::Stop;
 
 //RFID Setup
 #define RST_PIN         9           // Configurable, see typical pin layout above
@@ -87,9 +87,9 @@ void loop() {
         }else if(input.indexOf("FORWARD_LEFT") != -1){
           goForwardLeft();
         }else if(input.indexOf("LEFT") != -1){
-          driver.left(TURNSPEED, 0);
+          driver.left(SELECTEDSPEED, 0);
         }else if(input.indexOf("RIGHT") != -1){
-          driver.right(TURNSPEED, 0);
+          driver.right(SELECTEDSPEED, 0);
         }else if(input.indexOf("BACKWARD") != -1){
           driver.backward(SELECTEDSPEED, 0);
         }else if(input.indexOf("FORWARD") != -1){
@@ -98,7 +98,7 @@ void loop() {
         delay(1500);
         driver.stop();  
       }else if(input.startsWith("SPEED")){
-          String speedType = input.substring(input.indexOf("_") + 1, input.length());
+         String speedType = input.substring(input.indexOf("_") + 1, input.length());
         if(speedType == "1"){
             SELECTEDSPEED = NORMALSPEED;
         }else if(speedType == "2"){
@@ -108,6 +108,14 @@ void loop() {
         }
         Serial.print("Speed now: " + String(SELECTEDSPEED));
         TURNSPEED = SELECTEDSPEED + 30;
+      }else if(input.startsWith("MOVEMENT")){
+        String movementType = input.substring(input.indexOf("_") + 1, input.length());
+        if(movementType == "START"){
+            runMode = RunMode::Move;
+        }else if(movementType == "STOP"){
+            runMode = RunMode::Stop;
+        }
+        
       }
    }
    
@@ -135,30 +143,28 @@ void loop() {
      if(irData[0] == LOW && irData[1] == LOW && irData[3] == LOW && irData[4] == LOW){
         //nothing viewed -> Forward()
         goForward();
-      }else if(irData[1] == HIGH  && irData[2] == LOW){
-        do{
+      }else if(irData[1] == HIGH){
+        //do{
           goForwardRight();       
           readIRSensorsDatas();
-        }while(irData[2] != HIGH && irData[0] != HIGH && irData[4] != HIGH);
-      }else if(irData[3] == HIGH && irData[2] == LOW){
-        do{
+       // }while(irData[2] != HIGH && irData[0] != HIGH && irData[4] != HIGH);
+      }else if(irData[3] == HIGH){
+        //do{
           goForwardLeft();  
           readIRSensorsDatas();
-        }while(irData[2] != HIGH && irData[0] != HIGH && irData[4] != HIGH);
-      }else if(irData[0] == HIGH && irData[2] == LOW){
+        //}while(irData[2] != HIGH && irData[0] != HIGH && irData[4] != HIGH);
+      }else if(irData[0] == HIGH){
         do{
           turnRight();
           readIRSensorsDatas();
         }while(irData[2] != HIGH);  
-      }else if(irData[4] == HIGH && irData[2] == LOW){
+      }else if(irData[4] == HIGH){
         do{
           turnLeft();
           readIRSensorsDatas();
         }while(irData[2] != HIGH); 
       }else if(irData[2] == HIGH){
         goForward();
-      }else{
-        goStop();
       }
   }else{
     goStop();  

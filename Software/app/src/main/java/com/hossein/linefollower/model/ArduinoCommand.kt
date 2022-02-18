@@ -18,3 +18,8 @@ enum class DirectionCommand(val value: String){
     LEFT("DIRECTION_LEFT"),
     BACKWARD("DIRECTION_BACKWARD");
 }
+
+enum class MovementCommand(val value: String){
+    START("MOVEMENT_START"),
+    STOP("MOVEMENT_STOP");
+}
