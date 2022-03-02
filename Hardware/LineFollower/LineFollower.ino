@@ -19,10 +19,10 @@ const uint8_t IN3 = 6;
 const uint8_t IN4 = 7;
 
 
-const uint8_t MINSPEED = 70;
-const uint8_t NORMALSPEED = 90;
-const uint8_t MAXSPEED = 130;
-uint8_t TURNSPEED = 130;
+const uint8_t MINSPEED = 100;
+const uint8_t NORMALSPEED = 150;
+const uint8_t MAXSPEED = 250;
+uint8_t TURNSPEED = 220;
 uint8_t SELECTEDSPEED = NORMALSPEED;
 const uint8_t delay_time = 0;
 
@@ -107,7 +107,11 @@ void loop() {
             SELECTEDSPEED = speedType.toInt();
         }
         Serial.print("Speed now: " + String(SELECTEDSPEED));
-        TURNSPEED = SELECTEDSPEED + 30;
+        if(SELECTEDSPEED + 30 < 250){
+            TURNSPEED = SELECTEDSPEED + 30;
+        }else{
+            TURNSPEED = 250;
+        }
       }else if(input.startsWith("MOVEMENT")){
         String movementType = input.substring(input.indexOf("_") + 1, input.length());
         if(movementType == "START"){
@@ -269,33 +273,50 @@ int readBlock(int blockNumber, byte arrayAddress[])
 
 
 void handleRFIDTagData(int data){
-    //Serial.print("Data is : ");
     String output = "TAG_" + String(data);
     Serial.println(output);
     switch(data){
       case RFID_NO_TAG_READ: 
-        //Serial.println("No TAG read");
         break;
       case RFID_STOP_MOTION:
-        //Serial.println("Stop TAG");
         runMode = RunMode::Stop;
         break;
+        
       case RFID_TURN_LEFT: 
-        //Serial.println("Turn left TAG");
+      if(runMode != RunMode::Stop){
+        do{
+          turnLeft();  
+          readIRSensorsDatas();
+        }while(irData[2] == HIGH);
+        do{
+          turnLeft();  
+          readIRSensorsDatas();
+        }while(irData[2] != HIGH);
+        goForward();
+        delay(300);
+      }
         break;
       case RFID_TURN_RIGHT: 
-        //Serial.println("Turn Right TAG");
+      if(runMode != RunMode::Stop){
+        do{
+          turnRight();  
+          readIRSensorsDatas();
+        }while(irData[2] == HIGH);
+        do{
+          turnRight();  
+          readIRSensorsDatas();
+        }while(irData[2] != HIGH);
+        goForward();
+        delay(300);
+      }
         break;
       case RFID_SPEED_UP: 
-        //Serial.println("Speed up TAG");
         SELECTEDSPEED = MAXSPEED;
         break;
       case RFID_SPEED_DOWN: 
-        //Serial.println("Speed down TAG");
         SELECTEDSPEED = NORMALSPEED;
         break;
       default: 
-        //Serial.println("Unknown TAG");
         break;      
     }
 }
